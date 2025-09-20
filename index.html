@@ -65,13 +65,13 @@
 </head>
 <body>
 
-  <h1>AB's Mountain View</h1>
+  <h1>Homestay Booking</h1>
   <div id="homestayList">Loading...</div>
 
   <script>
     const homestays = [
       {
-        name: "Glassed Villa",
+        name: "Hill View Villa",
         basePrice: 2000,
         images: [
           "https://picsum.photos/id/1018/600/400",
@@ -80,8 +80,8 @@
         ]
       },
       {
-        name: "Mountain View Villa ",
-        basePrice: 2000,
+        name: "Forest Nest",
+        basePrice: 1800,
         images: [
           "https://picsum.photos/id/1021/600/400",
           "https://picsum.photos/id/1022/600/400",
@@ -89,8 +89,8 @@
         ]
       },
       {
-        name: "City View Villa",
-        basePrice: 2000,
+        name: "Lakefront Retreat",
+        basePrice: 2200,
         images: [
           "https://picsum.photos/id/1015/600/400",
           "https://picsum.photos/id/1016/600/400",
@@ -134,26 +134,58 @@
             <button class="next" onclick="changeSlide(${idx}, 1)">❯</button>
           </div>
           <p>Base Price: ₹${h.basePrice}</p>
-          <input type="date" id="date-${idx}" />
-          <p class="price-display" id="price-${idx}">Select a date to see price.</p>
+          <label>Check-in:</label>
+          <input type="date" id="checkin-${idx}" />
+          <label>Check-out:</label>
+          <input type="date" id="checkout-${idx}" />
+          <p class="price-display" id="price-${idx}">Select check-in and check-out to calculate price.</p>
         `;
 
         container.appendChild(homestayDiv);
 
-        // Pricing logic
-        const dateInput = homestayDiv.querySelector(`#date-${idx}`);
+        // Price calculation
+        const checkinInput = homestayDiv.querySelector(`#checkin-${idx}`);
+        const checkoutInput = homestayDiv.querySelector(`#checkout-${idx}`);
         const priceDisplay = homestayDiv.querySelector(`#price-${idx}`);
 
-        dateInput.addEventListener("change", () => {
-          const selectedDate = dateInput.value;
-          if (pricingData[selectedDate] && pricingData[selectedDate][h.name]) {
-            priceDisplay.textContent = `Price on ${selectedDate}: ₹${pricingData[selectedDate][h.name]}`;
-          } else if (selectedDate) {
-            priceDisplay.textContent = `No pricing for ${selectedDate}, showing base price: ₹${h.basePrice}`;
-          } else {
-            priceDisplay.textContent = "Select a date to see price.";
+        const calculatePrice = () => {
+          const checkin = checkinInput.value;
+          const checkout = checkoutInput.value;
+
+          if (!checkin || !checkout) {
+            priceDisplay.textContent = "Select check-in and check-out to calculate price.";
+            return;
           }
-        });
+
+          const startDate = new Date(checkin);
+          const endDate = new Date(checkout);
+
+          if (endDate <= startDate) {
+            priceDisplay.textContent = "Check-out must be after check-in.";
+            return;
+          }
+
+          let totalPrice = 0;
+          let date = new Date(startDate);
+          let missingDates = [];
+
+          while (date < endDate) {
+            const dateStr = date.toISOString().split('T')[0];
+            if (pricingData[dateStr] && pricingData[dateStr][h.name]) {
+              totalPrice += pricingData[dateStr][h.name];
+            } else {
+              totalPrice += h.basePrice;  // fallback to base price
+              missingDates.push(dateStr);
+            }
+            date.setDate(date.getDate() + 1);
+          }
+
+          priceDisplay.innerHTML = `Total price from <strong>${checkin}</strong> to <strong>${checkout}</strong> is <strong>₹${totalPrice}</strong>.` +
+            (missingDates.length > 0 ? `<br/><small>(Used base price for: ${missingDates.join(', ')})</small>` : '');
+        };
+
+        checkinInput.addEventListener("change", calculatePrice);
+        checkoutInput.addEventListener("change", calculatePrice);
       });
     }
 

@@ -1,122 +1,178 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Homestay Booking with Date-based Prices</title>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    max-width: 900px;
-    margin: auto;
-    padding: 20px;
-  }
-  h1 {
-    text-align: center;
-  }
-  .homestay {
-    border: 1px solid #ddd;
-    padding: 15px;
-    margin-bottom: 30px;
-    border-radius: 8px;
-  }
-  .homestay img {
-    width: 100%;
-    max-width: 600px;
-    border-radius: 5px;
-  }
-  .price-display {
-    font-weight: bold;
-    margin-top: 10px;
-    font-size: 18px;
-  }
-  label {
-    display: block;
-    margin-top: 10px;
-    margin-bottom: 5px;
-  }
-  input[type="date"] {
-    padding: 8px;
-    font-size: 16px;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <title>Homestay Booking</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    .homestay {
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin-bottom: 40px;
+      border-radius: 8px;
+    }
+    .slider {
+      position: relative;
+      max-width: 600px;
+      margin: 10px auto;
+    }
+    .slider img {
+      width: 100%;
+      height: auto;
+      border-radius: 5px;
+      display: none;
+    }
+    .slider img.active {
+      display: block;
+    }
+    .slider button {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: rgba(0,0,0,0.5);
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 20px;
+      border-radius: 50%;
+    }
+    .slider .prev {
+      left: 10px;
+    }
+    .slider .next {
+      right: 10px;
+    }
+    .price-display {
+      font-weight: bold;
+      margin-top: 10px;
+      font-size: 18px;
+    }
+    input[type="date"] {
+      padding: 8px;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
 
-<h1>Homestay Booking</h1>
+  <h1>Homestay Booking</h1>
+  <div id="homestayList">Loading...</div>
 
-<div id="homestayList"></div>
+  <script>
+    const homestays = [
+      {
+        name: "Hill View Villa",
+        basePrice: 2000,
+        images: [
+          "https://picsum.photos/id/1018/600/400",
+          "https://picsum.photos/id/1019/600/400",
+          "https://picsum.photos/id/1020/600/400"
+        ]
+      },
+      {
+        name: "Forest Nest",
+        basePrice: 1800,
+        images: [
+          "https://picsum.photos/id/1021/600/400",
+          "https://picsum.photos/id/1022/600/400",
+          "https://picsum.photos/id/1023/600/400"
+        ]
+      },
+      {
+        name: "Lakefront Retreat",
+        basePrice: 2200,
+        images: [
+          "https://picsum.photos/id/1015/600/400",
+          "https://picsum.photos/id/1016/600/400",
+          "https://picsum.photos/id/1014/600/400"
+        ]
+      }
+    ];
 
-<script>
-  const homestays = [
-    {
-      name: "Hill View Villa",
-      basePrice: 2000,
-      image: "https://picsum.photos/id/1018/600/400"
-    },
-    {
-      name: "Forest Nest",
-      basePrice: 1800,
-      image: "https://picsum.photos/id/1020/600/400"
-    },
-    {
-      name: "Lakefront Retreat",
-      basePrice: 2200,
-      image: "https://picsum.photos/id/1015/600/400"
-    }
-  ];
+    let pricingData = {};
+    const slideIndexMap = {};
 
-  // Pricing data will be loaded from JSON
-  let pricingData = {};
-
-  // Fetch pricing JSON file
-  fetch("pricing.json")
-    .then(res => res.json())
-    .then(data => {
-      pricingData = data;
-      renderHomestays();
-    })
-    .catch(err => {
-      document.getElementById("homestayList").innerHTML = `<p style="color:red;">Error loading pricing data: ${err.message}</p>`;
-      renderHomestays();  // fallback to base prices only
-    });
-
-  function renderHomestays() {
-    const container = document.getElementById("homestayList");
-    container.innerHTML = "";
-
-    homestays.forEach(h => {
-      const homestayDiv = document.createElement("div");
-      homestayDiv.classList.add("homestay");
-
-      homestayDiv.innerHTML = `
-        <h2>${h.name}</h2>
-        <img src="${h.image}" alt="${h.name}" />
-        <p>Base Price: ₹${h.basePrice}</p>
-        <label for="date-${h.name}">Check Price by Date:</label>
-        <input type="date" id="date-${h.name}" />
-        <p class="price-display" id="price-${h.name}">Select a date to see price.</p>
-      `;
-
-      container.appendChild(homestayDiv);
-
-      // Add event listener for date input
-      const dateInput = homestayDiv.querySelector(`#date-${h.name}`);
-      const priceDisplay = homestayDiv.querySelector(`#price-${h.name}`);
-
-      dateInput.addEventListener("change", () => {
-        const selectedDate = dateInput.value;
-
-        if (pricingData[selectedDate] && pricingData[selectedDate][h.name]) {
-          priceDisplay.textContent = `Price on ${selectedDate}: ₹${pricingData[selectedDate][h.name]}`;
-        } else if (selectedDate) {
-          priceDisplay.textContent = `No pricing data for ${selectedDate}, showing base price: ₹${h.basePrice}`;
-        } else {
-          priceDisplay.textContent = "Select a date to see price.";
-        }
+    // Load pricing.json
+    fetch("pricing.json")
+      .then(res => res.json())
+      .then(data => {
+        pricingData = data;
+        renderHomestays();
+      })
+      .catch(err => {
+        document.getElementById("homestayList").innerHTML = `<p style="color:red;">Error loading pricing data: ${err.message}</p>`;
+        renderHomestays(); // still show with base prices
       });
-    });
-  }
-</script>
+
+    function renderHomestays() {
+      const container = document.getElementById("homestayList");
+      container.innerHTML = "";
+
+      homestays.forEach((h, idx) => {
+        const homestayDiv = document.createElement("div");
+        homestayDiv.className = "homestay";
+
+        const imageSlides = h.images.map((img, i) => `
+          <img src="${img}" class="slide-${idx} ${i === 0 ? 'active' : ''}" />
+        `).join("");
+
+        homestayDiv.innerHTML = `
+          <h2>${h.name}</h2>
+          <div class="slider" id="slider-${idx}">
+            ${imageSlides}
+            <button class="prev" onclick="changeSlide(${idx}, -1)">❮</button>
+            <button class="next" onclick="changeSlide(${idx}, 1)">❯</button>
+          </div>
+          <p>Base Price: ₹${h.basePrice}</p>
+          <input type="date" id="date-${idx}" />
+          <p class="price-display" id="price-${idx}">Select a date to see price.</p>
+        `;
+
+        container.appendChild(homestayDiv);
+
+        // Pricing logic
+        const dateInput = homestayDiv.querySelector(`#date-${idx}`);
+        const priceDisplay = homestayDiv.querySelector(`#price-${idx}`);
+
+        dateInput.addEventListener("change", () => {
+          const selectedDate = dateInput.value;
+          if (pricingData[selectedDate] && pricingData[selectedDate][h.name]) {
+            priceDisplay.textContent = `Price on ${selectedDate}: ₹${pricingData[selectedDate][h.name]}`;
+          } else if (selectedDate) {
+            priceDisplay.textContent = `No pricing for ${selectedDate}, showing base price: ₹${h.basePrice}`;
+          } else {
+            priceDisplay.textContent = "Select a date to see price.";
+          }
+        });
+      });
+    }
+
+    function changeSlide(index, step) {
+      const slides = document.querySelectorAll(`.slide-${index}`);
+      if (!slideIndexMap[index]) slideIndexMap[index] = 0;
+
+      // Hide current slide
+      slides[slideIndexMap[index]].classList.remove("active");
+
+      // Update index
+      slideIndexMap[index] += step;
+      if (slideIndexMap[index] >= slides.length) slideIndexMap[index] = 0;
+      if (slideIndexMap[index] < 0) slideIndexMap[index] = slides.length - 1;
+
+      // Show new slide
+      slides[slideIndexMap[index]].classList.add("active");
+    }
+  </script>
 
 </body>
 </html>

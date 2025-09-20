@@ -5,13 +5,13 @@
     "Lakefront Retreat": 2800
   },
   "2025-09-21": {
-    "Hill View Villa": 2700,
+    "Hill View Villa": "booked",
     "Forest Nest": 2300,
     "Lakefront Retreat": 3000
   },
   "2025-09-22": {
     "Hill View Villa": 2600,
-    "Forest Nest": 2250,
+    "Forest Nest": "booked",
     "Lakefront Retreat": 2900
   }
 }

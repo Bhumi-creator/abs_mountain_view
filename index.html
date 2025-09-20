@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Ab's Mountain View</title>
+  <title>Homestay Booking</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -60,6 +60,7 @@
       padding: 8px;
       font-size: 16px;
       margin-top: 10px;
+      margin-right: 10px;
     }
   </style>
 </head>
@@ -71,7 +72,7 @@
   <script>
     const homestays = [
       {
-        name: "Glassed Villa",
+        name: "Hill View Villa",
         basePrice: 2000,
         images: [
           "https://picsum.photos/id/1018/600/400",
@@ -80,7 +81,7 @@
         ]
       },
       {
-        name: "Hill View Villa",
+        name: "Forest Nest",
         basePrice: 1800,
         images: [
           "https://picsum.photos/id/1021/600/400",
@@ -89,7 +90,7 @@
         ]
       },
       {
-        name: "City View Villa",
+        name: "Lakefront Retreat",
         basePrice: 2200,
         images: [
           "https://picsum.photos/id/1015/600/400",
@@ -111,7 +112,7 @@
       })
       .catch(err => {
         document.getElementById("homestayList").innerHTML = `<p style="color:red;">Error loading pricing data: ${err.message}</p>`;
-        renderHomestays(); // still show with base prices
+        renderHomestays(); // fallback if no pricing file
       });
 
     function renderHomestays() {
@@ -168,19 +169,33 @@
           let totalPrice = 0;
           let date = new Date(startDate);
           let missingDates = [];
+          let bookedDates = [];
 
           while (date < endDate) {
             const dateStr = date.toISOString().split('T')[0];
-            if (pricingData[dateStr] && pricingData[dateStr][h.name]) {
-              totalPrice += pricingData[dateStr][h.name];
+            const priceEntry = pricingData[dateStr]?.[h.name];
+
+            if (priceEntry === "booked") {
+              bookedDates.push(dateStr);
+            } else if (typeof priceEntry === "number") {
+              totalPrice += priceEntry;
             } else {
-              totalPrice += h.basePrice;  // fallback to base price
+              totalPrice += h.basePrice;
               missingDates.push(dateStr);
             }
+
             date.setDate(date.getDate() + 1);
           }
 
-          priceDisplay.innerHTML = `Total price from <strong>${checkin}</strong> to <strong>${checkout}</strong> is <strong>₹${totalPrice}</strong>.` +
+          if (bookedDates.length > 0) {
+            priceDisplay.innerHTML = `
+              ❌ <strong>${h.name}</strong> is <strong>booked</strong> on: ${bookedDates.join(', ')}.
+              <br>Please choose different dates.
+            `;
+            return;
+          }
+
+          priceDisplay.innerHTML = `✅ Total price from <strong>${checkin}</strong> to <strong>${checkout}</strong> is <strong>₹${totalPrice}</strong>.` +
             (missingDates.length > 0 ? `<br/><small>(Used base price for: ${missingDates.join(', ')})</small>` : '');
         };
 
